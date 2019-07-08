@@ -14,16 +14,21 @@ class FC_to_CM {
 private:
   XBeeAPIParser _xbee;
   uint32_t _timeout;
+  uint32_t _invitation_timeout;
 
   //RTOS management
   Mutex _data_mutex;
   Thread _rx_thread;
+  Thread _check_for_invitation;           //timer to check for how long it has been searchign for invitation, dissociate if too long. Terminate after connection (invitation)
 
   void _listen_for_rx();                //listens for rx, then runs one of the appropriate responces below, may handle smaller tasks like switching flags 
   void _process_invitation(uint64_t address);           //if recieved 0x00, sends 0x10
   void _process_clock_set(char*);
   void _process_clock_test(char*, uint64_t address);      //if recieved 0x21, send 0x31 
   void _process_request_data(uint64_t address);         //if recieved 0x40, send 0x50
+
+  void _wait_for_invitation();
+  Timer _invitation_timer;
 
   char _flightState;                     //stores the state of the flight from CM broadcasts--enum: preLaunch(0x00),ascent(0x01),descent(0x02),landed(0x03),labTest(0x10)
   char _dataInterval;                    //in seconds
@@ -47,17 +52,15 @@ public:
   void setResponseDeclineResponce() { _rsvpState = 0x00;}      //set functions to change responce state, deafults to 0x00 in constructor
   void setResponseClockOnly()       { _rsvpState = 0x01;}
   void setResponseClockAndData()    { _rsvpState = 0x02;}
-
-  char getFlightState() { return _flightState; }
-
+  
   void setDataTransmitSize(int size) { _dataTransmitSize = size; }
-
+  
   void saveInt(int val);
   void saveFloat(float val);
   void saveFloatAsInt(float val, int precision);
 
-  int getFullData(int index) {return _fullDataSet[index];}
-  int getPartialData(int index) {return _partialDataSet[index];}
+  bool checkClock() { return _goodClock; }
+  char getFlightState() { return _flightState; }      //only allow dissociate in 0x00
   int getDataInterval() {return _dataInterval;}
 };
 

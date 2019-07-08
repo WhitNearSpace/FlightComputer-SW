@@ -2,12 +2,21 @@
 
 FC_to_CM::FC_to_CM(PinName tx, PinName rx) : _xbee(tx, rx) {
   _timeout = 100;
+  _invitation_timeout = 180;                                      //3 minutes
   _rx_thread.start(callback(this, &FC_to_CM::_listen_for_rx));    //start rx thread to read in serial communication from xbee modem
+  _check_for_invitation.start(this, &FC_to_CM::_wait_for_invitation);
   _flightState = 0x00;
   _rsvpState = 0x00;
   _dataTransmitSize = 0;
   _partialDataIndex = 0;
   _readyToSendData = false;
+}
+
+void FC_to_CM::_wait_for_invitation() {
+  _invitation_timer.start();
+  if (_invitation_timer.read() > _invitation_timeout) {
+    //dissociate
+  }
 }
 
 void FC_to_CM::_listen_for_rx() {
