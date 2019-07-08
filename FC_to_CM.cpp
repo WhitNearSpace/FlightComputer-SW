@@ -4,18 +4,29 @@ FC_to_CM::FC_to_CM(PinName tx, PinName rx) : _xbee(tx, rx) {
   _timeout = 100;
   _invitation_timeout = 180;                                      //3 minutes
   _rx_thread.start(callback(this, &FC_to_CM::_listen_for_rx));    //start rx thread to read in serial communication from xbee modem
-  _check_for_invitation.start(this, &FC_to_CM::_wait_for_invitation);
+  _check_for_invitation.start(callback(this, &FC_to_CM::_wait_for_invitation));
   _flightState = 0x00;
   _rsvpState = 0x00;
   _dataTransmitSize = 0;
   _partialDataIndex = 0;
   _readyToSendData = false;
+  _goodClock = false;
+  _dataInterval = 0;
+
+  set_time(0);
 }
 
 void FC_to_CM::_wait_for_invitation() {
   _invitation_timer.start();
-  if (_invitation_timer.read() > _invitation_timeout) {
-    //dissociate
+  while(true) {
+    if (_xbee.associated()) {
+      _invitation_timer.stop();
+      //stop thread
+    }
+    if (_invitation_timer.read() > _invitation_timeout) {
+      //dissociate
+      _invitation_timer.reset();
+    }
   }
 }
 
@@ -130,15 +141,18 @@ void FC_to_CM::_transferPartialData() {                       //moves data in pa
     _data_mutex.unlock();
   }
 }
-
+/*
 void FC_to_CM::saveInt(int val) {
   _addBytesToData(val);
 }
-
-void FC_to_CM::saveFloat(float val) {
-  _addBytesToData(val);
-
-}
+*/
+void FC_to_CM::saveUInt8(uint8_t val) { _addBytesToData(val); }
+void FC_to_CM::saveInt8(int8_t val) { _addBytesToData(val); }
+void FC_to_CM::saveUInt16(uint16_t val) { _addBytesToData(val); }
+void FC_to_CM::saveInt16(int16_t val) { _addBytesToData(val); }
+void FC_to_CM::saveUInt32(uint32_t val) { _addBytesToData(val); }
+void FC_to_CM::saveInt32(int32_t val) { _addBytesToData(val); }
+void FC_to_CM::saveFloat(float val) { _addBytesToData(val); }
 void FC_to_CM::saveFloatAsInt(float val, int precision) {
   float newVal = val;
   for (int i = 0; i < precision; i++){                      //multiply val by 10^(precision)
@@ -147,6 +161,7 @@ void FC_to_CM::saveFloatAsInt(float val, int precision) {
   int intVal = int(newVal);
   _addBytesToData(intVal);
 }
+void FC_to_CM::saveDouble(double val) { _addBytesToData(val); }
 
 template<typename T>
 void FC_to_CM::_addBytesToData(T value) {
@@ -167,4 +182,15 @@ void FC_to_CM::_addBytesToData(T value) {
   if (_partialDataIndex == _dataTransmitSize) {               //once enough data has been added, transfer partial data to full data
     _transferPartialData();
   }
+}
+
+
+time_t FC_to_CM::getTime() {
+  time_t currentTime = time(NULL);
+  return currentTime;
+}
+
+std::string FC_to_CM::getTimeFormatted() {
+  time_t currentTime = getTime();
+  return ctime(&currentTime);
 }
