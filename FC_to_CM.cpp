@@ -1,6 +1,6 @@
 #include "FC_to_CM.h"
 
-FC_to_CM::FC_to_CM(PinName tx, PinName rx) : _xbee(tx, rx) {
+FC_to_CM::FC_to_CM(PinName tx, PinName rx) : _xbee(tx, rx), _rx_thread(osPriorityAboveNormal, 1000,NULL,"our_rx_thread"), _check_for_invitation(osPriorityBelowNormal, 500,NULL,"invitation_thread") {
   _timeout = 100;
   _invitation_timeout = 180;                                      //3 minutes
   _rx_thread.start(callback(this, &FC_to_CM::_listen_for_rx));    //start rx thread to read in serial communication from xbee modem
@@ -14,6 +14,9 @@ FC_to_CM::FC_to_CM(PinName tx, PinName rx) : _xbee(tx, rx) {
   _dataInterval = 0;
 
   set_time(0);
+
+  printf("> rx thread used space: %d\r\n", _rx_thread.used_stack());
+  printf("> invitation used space: %d\r\n", _check_for_invitation.used_stack());
 }
 
 void FC_to_CM::_wait_for_invitation() {
@@ -166,6 +169,7 @@ void FC_to_CM::saveDouble(double val) { _addBytesToData(val); }
 template<typename T>
 void FC_to_CM::_addBytesToData(T value) {
   int size = sizeof(T);
+  printf("Size: %d Stored: %d\r\n", size, _partialDataIndex);
   if ((size + _partialDataIndex) <= _dataTransmitSize) {       //check to see if room is availible in data set
     unsigned char bytes[16];                       //create array of bytes (max size is 16 bytes)
 
