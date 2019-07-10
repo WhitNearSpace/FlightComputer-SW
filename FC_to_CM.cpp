@@ -15,8 +15,8 @@ FC_to_CM::FC_to_CM(PinName tx, PinName rx) : _xbee(tx, rx), _rx_thread(osPriorit
 
   set_time(0);
 
-  printf("> rx thread used space: %d\r\n", _rx_thread.used_stack());
-  printf("> invitation used space: %d\r\n", _check_for_invitation.used_stack());
+  printf("> rx thread used space: %d\r\n", int(_rx_thread.used_stack()));
+  printf("> invitation used space: %d\r\n", int(_check_for_invitation.used_stack()));
 }
 
 void FC_to_CM::_wait_for_invitation() {
@@ -117,7 +117,7 @@ void FC_to_CM::_process_clock_test(char* timeBytes, uint64_t address) {
 void FC_to_CM::_process_request_data( uint64_t address){
   if (_readyToSendData) {                                     //check to see if data set is ready to be transmitted
     if(_data_mutex.trylock_for(_timeout)){                    //lockout, so transfer data cannot be called and change data durring transmission
-      _readyToSendData = false;                               //clear flag
+      //_readyToSendData = false;                               //clear flag -- this causes the FC to only send unique data, and never send the same data twice
       _partialDataIndex = 0;
       char msg[MAX_MSG_LENGTH];                               //create message
       msg[0] = 0x50;                                          //sending data is code 0x50
@@ -177,7 +177,9 @@ void FC_to_CM::_addBytesToData(T value) {
 
     for (int i = 0; i < size; i++) {
       _partialDataSet[_partialDataIndex++] = bytes[i];    //add bytes to partial data
+      printf("0x%X ", bytes[i]);
     } 
+    printf("\r\n");
   }
   else {
     printf("data could not fit in storage\r\n");              //failed, not enough room
@@ -185,6 +187,7 @@ void FC_to_CM::_addBytesToData(T value) {
   }
   if (_partialDataIndex == _dataTransmitSize) {               //once enough data has been added, transfer partial data to full data
     _transferPartialData();
+    printf("Data ready for transmition.\r\n");
   }
 }
 
