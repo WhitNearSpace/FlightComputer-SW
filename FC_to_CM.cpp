@@ -156,13 +156,13 @@ void FC_to_CM::saveInt16(int16_t val) { _addBytesToData(val); }
 void FC_to_CM::saveUInt32(uint32_t val) { _addBytesToData(val); }
 void FC_to_CM::saveInt32(int32_t val) { _addBytesToData(val); }
 void FC_to_CM::saveFloat(float val) { _addBytesToData(val); }
-void FC_to_CM::saveFloatAsInt(float val, int precision) {
+void FC_to_CM::saveFloatAsInt16(float val, int precision) {
   float newVal = val;
   for (int i = 0; i < precision; i++){                      //multiply val by 10^(precision)
     newVal = newVal * 10;
   }
-  int intVal = int(newVal);
-  _addBytesToData(intVal);
+  int16_t shortVal = int16_t(newVal);
+  _addBytesToData(shortVal);
 }
 void FC_to_CM::saveDouble(double val) { _addBytesToData(val); }
 
