@@ -10,6 +10,15 @@
 #define MAX_MSG_LENGTH 70
 #define MAX_POD_DATA_BYTES 50
 
+#define FLIGHT_STATE_LABMODE 0x00
+#define FLIGHT_STATE_PRELAUNCH 0x01
+#define FLIGHT_STATE_FLIGHT 0x02
+#define FLIGHT_STATE_LANDED 0x04
+
+#define RESPONCE_DECLINE 0
+#define RESPONCE_CLOCK 1
+#define RESPONCE_DATA 2
+
 class FC_to_CM {
 private:
   XBeeAPIParser _xbee;
@@ -46,13 +55,13 @@ private:
   template<typename T>
   void _addBytesToData(T value);                        //converts any data type to bytes, adds them to partial data
 
+  time_t _timeOfLaunch;                                 //saves the time of launch
+
 public:
   FC_to_CM(PinName tx, PinName rx);
 
   //set functions to change FC responce state, defaults to 0x00 (decline) in constructor
-  void setResponseDeclineResponce() { _rsvpState = 0x00;}      
-  void setResponseClockOnly()       { _rsvpState = 0x01;}
-  void setResponseClockAndData()    { _rsvpState = 0x02;}
+  void setResponseState(int newState) { _rsvpState = newState; }
   
   //functions to set data transmit size, and save data by type. This must match with the order and quantity that is on LC
   void setDataTransmitSize(int size) { _dataTransmitSize = size; }
@@ -73,7 +82,8 @@ public:
 
   time_t getTime();
   std::string getTimeFormatted();
-  time_t getTimeSinceStatup();
+  time_t getTimeSinceStartup();
+  time_t getTimeSinceLaunch();
 };
 
 #endif

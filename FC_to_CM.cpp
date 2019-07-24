@@ -5,8 +5,8 @@ FC_to_CM::FC_to_CM(PinName tx, PinName rx) : _xbee(tx, rx), _rx_thread(osPriorit
   _invitation_timeout = 180;                                      //3 minutes
   _rx_thread.start(callback(this, &FC_to_CM::_listen_for_rx));    //start rx thread to read in serial communication from xbee modem
   _check_for_invitation.start(callback(this, &FC_to_CM::_wait_for_invitation));
-  _flightState = 0x00;
-  _rsvpState = 0x00;
+  _flightState = FLIGHT_STATE_LABMODE;
+  _rsvpState = RESPONCE_DECLINE;
   _dataTransmitSize = 0;
   _partialDataIndex = 0;
   _readyToSendData = false;
@@ -28,7 +28,7 @@ void FC_to_CM::_wait_for_invitation() {
     }
     if (_invitation_timer.read() > _invitation_timeout) {
       //dissociate
-      _invitation_timer.reset();
+      _invitation_timer.reset();  
     }
   }
 }
@@ -48,14 +48,15 @@ void FC_to_CM::_listen_for_rx() {
             _process_invitation(sender);    //send 0x10 responce
             break;
           case 0x01:  // primed for launch
-            _flightState = 0x01;
+            _flightState = FLIGHT_STATE_PRELAUNCH;
             _dataInterval = msg[1];
             break;
           case 0x02:  // launch detected          //flight state 0x03-descent not yet implemented
-            _flightState = 0x02;
+            _timeOfLaunch = time(NULL);           //set the time of launch
+            _flightState = FLIGHT_STATE_FLIGHT;
             break;
           case 0x03:  // landing confirmed
-            _flightState = 0x04;
+            _flightState = FLIGHT_STATE_LANDED;
             break;
           case 0x20: // set clock
             _process_clock_set(msg);
@@ -195,6 +196,11 @@ void FC_to_CM::_addBytesToData(T value) {
 time_t FC_to_CM::getTime() {
   time_t currentTime = time(NULL);
   return currentTime;
+}
+
+time_t FC_to_CM::getTimeSinceLaunch() {
+  time_t currentTime = time(NULL);
+  return currentTime - _timeOfLaunch;
 }
 
 std::string FC_to_CM::getTimeFormatted() {
