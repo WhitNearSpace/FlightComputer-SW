@@ -13,6 +13,8 @@ FC_to_CM::FC_to_CM(PinName tx, PinName rx) : _xbee(tx, rx), _rx_thread(osPriorit
   _goodClock = false;
   _dataInterval = 0;
 
+  _timeOfLaunch = 0;
+
   set_time(0);
 
   printf("> rx thread used space: %d\r\n", int(_rx_thread.used_stack()));
@@ -199,8 +201,12 @@ time_t FC_to_CM::getTime() {
 }
 
 time_t FC_to_CM::getTimeSinceLaunch() {
-  time_t currentTime = time(NULL);
-  return currentTime - _timeOfLaunch;
+  if (_timeOfLaunch == 0) {
+    return 0;
+  } else { 
+    time_t currentTime = time(NULL);
+    return currentTime - _timeOfLaunch;
+  }
 }
 
 std::string FC_to_CM::getTimeFormatted() {

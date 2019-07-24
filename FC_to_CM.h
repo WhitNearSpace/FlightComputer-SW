@@ -82,7 +82,6 @@ public:
 
   time_t getTime();
   std::string getTimeFormatted();
-  time_t getTimeSinceStartup();
   time_t getTimeSinceLaunch();
 };
 
