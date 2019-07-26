@@ -121,7 +121,6 @@ void FC_to_CM::_process_request_data( uint64_t address){
   if (_readyToSendData) {                                     //check to see if data set is ready to be transmitted
     if(_data_mutex.trylock_for(_timeout)){                    //lockout, so transfer data cannot be called and change data durring transmission
       //_readyToSendData = false;                               //clear flag -- this causes the FC to only send unique data, and never send the same data twice
-      _partialDataIndex = 0;
       char msg[MAX_MSG_LENGTH];                               //create message
       msg[0] = 0x50;                                          //sending data is code 0x50
       for (int i = 0; i < _dataTransmitSize; i++) {           //load complete data set into message
