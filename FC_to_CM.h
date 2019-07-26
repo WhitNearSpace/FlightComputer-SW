@@ -81,7 +81,7 @@ public:
   int getDataInterval() { return _dataInterval; }
 
   time_t getTime();
-  std::string getTimeFormatted();
+  char* getTimeFormatted();
   time_t getTimeSinceLaunch();
 };
 
