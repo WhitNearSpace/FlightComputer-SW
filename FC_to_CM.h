@@ -15,9 +15,9 @@
 #define FLIGHT_STATE_FLIGHT 0x02
 #define FLIGHT_STATE_LANDED 0x04
 
-#define RESPONCE_DECLINE 0
-#define RESPONCE_CLOCK 1
-#define RESPONCE_DATA 2
+#define RESPONSE_DECLINE 0
+#define RESPONSE_CLOCK 1
+#define RESPONSE_DATA 2
 
 class FC_to_CM {
 private:
