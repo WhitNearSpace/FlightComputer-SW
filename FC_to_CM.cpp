@@ -6,7 +6,7 @@ FC_to_CM::FC_to_CM(PinName tx, PinName rx) : _xbee(tx, rx), _rx_thread(osPriorit
   _rx_thread.start(callback(this, &FC_to_CM::_listen_for_rx));    //start rx thread to read in serial communication from xbee modem
   _check_for_invitation.start(callback(this, &FC_to_CM::_wait_for_invitation));
   _flightState = FLIGHT_STATE_LABMODE;
-  _rsvpState = RESPONCE_DECLINE;
+  _rsvpState = RESPONSE_DECLINE;
   _dataTransmitSize = 0;
   _partialDataIndex = 0;
   _readyToSendData = false;
