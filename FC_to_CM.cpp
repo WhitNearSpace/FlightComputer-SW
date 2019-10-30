@@ -71,7 +71,7 @@ void FC_to_CM::_listen_for_rx() {
             break;
           default:
             // Nothing should fall into this category
-            printf("Error! Unexpect rx msg code %0X\r\n", msg[0]);
+            printf("Error! Unexpected rx msg code %0X\r\n", msg[0]);
         }
       }
     }
@@ -83,7 +83,7 @@ void FC_to_CM::_process_invitation(uint64_t address) {    //sends 0x10 trasmissi
   msg[0] = 0x10;
   msg[1] = _rsvpState;
   _xbee.txAddressed(address, msg, 2);
-  printf("Ive got an inviatation!\r\n");
+  printf("I've got an invitation!\r\n");
 }
 
 void FC_to_CM::_process_clock_set(char* timeBytes) {
@@ -189,7 +189,7 @@ void FC_to_CM::_addBytesToData(T value) {
   }
   if (_partialDataIndex == _dataTransmitSize) {               //once enough data has been added, transfer partial data to full data
     _transferPartialData();
-    printf("Data ready for transmition.\r\n");
+    printf("Data ready for transmission.\r\n");
   }
 }
 
