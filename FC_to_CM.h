@@ -81,7 +81,7 @@ public:
   int getDataInterval() { return _dataInterval; }
 
   time_t getTime();
-  char* getTimeFormatted();
+  void getTimeFormatted(char* t_string, int len);
   time_t getTimeSinceLaunch();
 };
 

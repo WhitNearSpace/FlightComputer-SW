@@ -208,14 +208,12 @@ time_t FC_to_CM::getTimeSinceLaunch() {
   }
 }
 
-char* FC_to_CM::getTimeFormatted() {
+void FC_to_CM::getTimeFormatted(char* t_string, int len) {
   time_t rawTime;
   struct tm* timeinfo;
-  char t_string[80];
 
   time(&rawTime);
   timeinfo = gmtime(&rawTime);
   
-  strftime(t_string,80,"%D %R",timeinfo);
-  return t_string;
+  strftime(t_string,len,"%D %R",timeinfo);
 }
