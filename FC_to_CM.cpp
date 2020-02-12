@@ -215,5 +215,5 @@ void FC_to_CM::getTimeFormatted(char* t_string, int len) {
   time(&rawTime);
   timeinfo = gmtime(&rawTime);
   
-  strftime(t_string,len,"%D %R",timeinfo);
+  strftime(t_string,len,"%D %T",timeinfo);
 }
