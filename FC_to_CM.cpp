@@ -2,8 +2,8 @@
 
 FC_to_CM::FC_to_CM(PinName tx, PinName rx) : _rx_thread(osPriorityAboveNormal, 1000,NULL,"our_rx_thread"), _check_for_invitation(osPriorityBelowNormal, 500,NULL,"invitation_thread") {
   _xbee = new XBeeAPIParser(tx, rx);
-  _timeout = 100;
-  _invitation_timeout = 180;                                      //3 minutes
+  _timeout = 100ms;
+  _invitation_timeout = 180s;                                      
   _rx_thread.start(callback(this, &FC_to_CM::_listen_for_rx));    //start rx thread to read in serial communication from xbee modem
   _check_for_invitation.start(callback(this, &FC_to_CM::_wait_for_invitation));
   _flightState = FLIGHT_STATE_LABMODE;
@@ -18,8 +18,8 @@ FC_to_CM::FC_to_CM(PinName tx, PinName rx) : _rx_thread(osPriorityAboveNormal, 1
 
   set_time(0);
 
-  printf("> rx thread used space: %d\r\n", int(_rx_thread.used_stack()));
-  printf("> invitation used space: %d\r\n", int(_check_for_invitation.used_stack()));
+  printf("> rx thread used space: %d\n", int(_rx_thread.used_stack()));
+  printf("> invitation used space: %d\n", int(_check_for_invitation.used_stack()));
 }
 
 void FC_to_CM::_wait_for_invitation() {
@@ -29,7 +29,7 @@ void FC_to_CM::_wait_for_invitation() {
       _invitation_timer.stop();
       //stop thread
     }
-    if (_invitation_timer.read() > _invitation_timeout) {
+    if (_invitation_timer.elapsed_time() > _invitation_timeout) {
       //dissociate
       _invitation_timer.reset();  
     }
@@ -72,19 +72,19 @@ void FC_to_CM::_listen_for_rx() {
             break;
           default:
             // Nothing should fall into this category
-            printf("Error! Unexpected rx msg code %0X\r\n", msg[0]);
+            printf("Error! Unexpected rx msg code %0X\n", msg[0]);
         }
       }
     }
   }
 }
  
-void FC_to_CM::_process_invitation(uint64_t address) {    //sends 0x10 trasmission to confirm invitation, and responce (decline, clock only, clock and data)
+void FC_to_CM::_process_invitation(uint64_t address) {    //sends 0x10 transmission to confirm invitation, and response (decline, clock only, clock and data)
   char msg[2];
   msg[0] = 0x10;
   msg[1] = _rsvpState;
   _xbee->txAddressed(address, msg, 2);
-  printf("I've got an invitation!\r\n");
+  printf("I've got an invitation!\n");
 }
 
 void FC_to_CM::_process_clock_set(char* timeBytes) {
@@ -93,7 +93,7 @@ void FC_to_CM::_process_clock_set(char* timeBytes) {
     t = (t<<8) | timeBytes[i+1];
   }
   set_time(t);                    //set mbed clock to UNIX time
-  printf("my clock has been set!\r\n");
+  printf("my clock has been set!\n");
 }
 
 void FC_to_CM::_process_clock_test(char* timeBytes, uint64_t address) {
@@ -114,7 +114,7 @@ void FC_to_CM::_process_clock_test(char* timeBytes, uint64_t address) {
     msg[1] = 0x00;  //pass
   }
   _xbee->txAddressed(address, msg, 2);
-  printf("my clock has been tested! any errors?: %d\r\n", msg[1]);
+  printf("my clock has been tested! any errors?: %d\n", msg[1]);
 }
 
 
@@ -134,7 +134,7 @@ void FC_to_CM::_process_request_data( uint64_t address){
     char msg[1] = {0x50};
     _xbee->txAddressed(address, msg, 1);                       //send empty data packet
   }
-  printf("data has been requested of me!\r\n");
+  printf("data has been requested of me!\n");
 }
 
 void FC_to_CM::_transferPartialData() {                       //moves data in partial data to full data when ready to transmit
@@ -147,11 +147,7 @@ void FC_to_CM::_transferPartialData() {                       //moves data in pa
     _data_mutex.unlock();
   }
 }
-/*
-void FC_to_CM::saveInt(int val) {
-  _addBytesToData(val);
-}
-*/
+
 void FC_to_CM::saveUInt8(uint8_t val) { _addBytesToData(val); }
 void FC_to_CM::saveInt8(int8_t val) { _addBytesToData(val); }
 void FC_to_CM::saveUInt16(uint16_t val) { _addBytesToData(val); }
@@ -172,8 +168,8 @@ void FC_to_CM::saveDouble(double val) { _addBytesToData(val); }
 template<typename T>
 void FC_to_CM::_addBytesToData(T value) {
   int size = sizeof(T);
-  printf("Size: %d Stored: %d\r\n", size, _partialDataIndex);
-  if ((size + _partialDataIndex) <= _dataTransmitSize) {       //check to see if room is availible in data set
+  printf("Size: %d Stored: %d\n", size, _partialDataIndex);
+  if ((size + _partialDataIndex) <= _dataTransmitSize) {       //check to see if room is available in data set
     unsigned char bytes[16];                       //create array of bytes (max size is 16 bytes)
 
     memcpy(bytes, &value, size);                     //copy value's bytes into array
@@ -182,15 +178,15 @@ void FC_to_CM::_addBytesToData(T value) {
       _partialDataSet[_partialDataIndex++] = bytes[i];    //add bytes to partial data
       printf("0x%X ", bytes[i]);
     } 
-    printf("\r\n");
+    printf("\n");
   }
   else {
-    printf("data could not fit in storage\r\n");              //failed, not enough room
+    printf("data could not fit in storage\n");              //failed, not enough room
     
   }
   if (_partialDataIndex == _dataTransmitSize) {               //once enough data has been added, transfer partial data to full data
     _transferPartialData();
-    printf("Data ready for transmission.\r\n");
+    printf("Data ready for transmission.\n");
   }
 }
 

@@ -21,8 +21,8 @@
 class FC_to_CM {
 private:
   XBeeAPIParser* _xbee;
-  uint32_t _timeout;
-  uint32_t _invitation_timeout;
+  std::chrono::milliseconds _timeout;
+  std::chrono::milliseconds _invitation_timeout;
 
   //RTOS management
   Mutex _data_mutex;
