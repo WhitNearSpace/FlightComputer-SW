@@ -3,7 +3,6 @@
 
 #include "XBeeAPIParser.h"
 #include "mbed.h"
-#include <rtos.h>
 #include <string> 
 
 #define MAX_FC 6
@@ -21,7 +20,7 @@
 
 class FC_to_CM {
 private:
-  XBeeAPIParser _xbee;
+  XBeeAPIParser* _xbee;
   uint32_t _timeout;
   uint32_t _invitation_timeout;
 

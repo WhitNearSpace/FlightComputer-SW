@@ -1,6 +1,7 @@
 #include "FC_to_CM.h"
 
-FC_to_CM::FC_to_CM(PinName tx, PinName rx) : _xbee(tx, rx), _rx_thread(osPriorityAboveNormal, 1000,NULL,"our_rx_thread"), _check_for_invitation(osPriorityBelowNormal, 500,NULL,"invitation_thread") {
+FC_to_CM::FC_to_CM(PinName tx, PinName rx) : _rx_thread(osPriorityAboveNormal, 1000,NULL,"our_rx_thread"), _check_for_invitation(osPriorityBelowNormal, 500,NULL,"invitation_thread") {
+  _xbee = new XBeeAPIParser(tx, rx);
   _timeout = 100;
   _invitation_timeout = 180;                                      //3 minutes
   _rx_thread.start(callback(this, &FC_to_CM::_listen_for_rx));    //start rx thread to read in serial communication from xbee modem
@@ -24,7 +25,7 @@ FC_to_CM::FC_to_CM(PinName tx, PinName rx) : _xbee(tx, rx), _rx_thread(osPriorit
 void FC_to_CM::_wait_for_invitation() {
   _invitation_timer.start();
   while(true) {
-    if (_xbee.associated()) {
+    if (_xbee->associated()) {
       _invitation_timer.stop();
       //stop thread
     }
@@ -39,11 +40,11 @@ void FC_to_CM::_listen_for_rx() {
   int len;
   char msg[MAX_MSG_LENGTH];
   uint64_t sender = 0;
-  _xbee.set_frame_alert_thread_id(osThreadGetId());
+  _xbee->set_frame_alert_thread_id(ThisThread::get_id());
   while (true) {
     osSignalWait(0x01,osWaitForever);
-    if (_xbee.readable()) {
-      len = _xbee.rxPacket(msg, &sender);
+    if (_xbee->readable()) {
+      len = _xbee->rxPacket(msg, &sender);
       if (len > 0) {
         switch (msg[0]) {
           case 0x00:  // Invitation to connect
@@ -82,7 +83,7 @@ void FC_to_CM::_process_invitation(uint64_t address) {    //sends 0x10 trasmissi
   char msg[2];
   msg[0] = 0x10;
   msg[1] = _rsvpState;
-  _xbee.txAddressed(address, msg, 2);
+  _xbee->txAddressed(address, msg, 2);
   printf("I've got an invitation!\r\n");
 }
 
@@ -112,7 +113,7 @@ void FC_to_CM::_process_clock_test(char* timeBytes, uint64_t address) {
     _goodClock = 1;
     msg[1] = 0x00;  //pass
   }
-  _xbee.txAddressed(address, msg, 2);
+  _xbee->txAddressed(address, msg, 2);
   printf("my clock has been tested! any errors?: %d\r\n", msg[1]);
 }
 
@@ -126,12 +127,12 @@ void FC_to_CM::_process_request_data( uint64_t address){
       for (int i = 0; i < _dataTransmitSize; i++) {           //load complete data set into message
         msg[i + 1] = _fullDataSet[i];
       }
-    _xbee.txAddressed(address, msg, _dataTransmitSize + 1);   //send msg
+    _xbee->txAddressed(address, msg, _dataTransmitSize + 1);   //send msg
       _data_mutex.unlock();                                   //unlock mutex
     } 
   } else {                                                    //if data is not ready
     char msg[1] = {0x50};
-    _xbee.txAddressed(address, msg, 1);                       //send empty data packet
+    _xbee->txAddressed(address, msg, 1);                       //send empty data packet
   }
   printf("data has been requested of me!\r\n");
 }
