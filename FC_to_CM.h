@@ -58,6 +58,7 @@ private:
 
 public:
   FC_to_CM(PinName tx, PinName rx);
+  FC_to_CM(PinName tx, PinName rx, int baud);
 
   //set functions to change FC responce state, defaults to 0x00 (decline) in constructor
   void setResponseState(int newState) { _rsvpState = newState; }

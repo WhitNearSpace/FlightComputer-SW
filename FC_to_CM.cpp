@@ -22,6 +22,28 @@ FC_to_CM::FC_to_CM(PinName tx, PinName rx) : _rx_thread(osPriorityAboveNormal, 1
   printf("> invitation used space: %d\n", int(_check_for_invitation.used_stack()));
 }
 
+FC_to_CM::FC_to_CM(PinName tx, PinName rx, int baud) : _rx_thread(osPriorityAboveNormal, 1000,NULL,"our_rx_thread"), _check_for_invitation(osPriorityBelowNormal, 500,NULL,"invitation_thread") {
+  _xbee = new XBeeAPIParser(tx, rx, baud);
+  _timeout = 100ms;
+  _invitation_timeout = 180s;                                      
+  _rx_thread.start(callback(this, &FC_to_CM::_listen_for_rx));    //start rx thread to read in serial communication from xbee modem
+  _check_for_invitation.start(callback(this, &FC_to_CM::_wait_for_invitation));
+  _flightState = FLIGHT_STATE_LABMODE;
+  _rsvpState = RESPONSE_DECLINE;
+  _dataTransmitSize = 0;
+  _partialDataIndex = 0;
+  _readyToSendData = false;
+  _goodClock = false;
+  _dataInterval = 0;
+
+  _timeOfLaunch = 0;
+
+  set_time(0);
+
+  printf("> rx thread used space: %d\n", int(_rx_thread.used_stack()));
+  printf("> invitation used space: %d\n", int(_check_for_invitation.used_stack()));
+}
+
 void FC_to_CM::_wait_for_invitation() {
   _invitation_timer.start();
   while(true) {
