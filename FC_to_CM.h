@@ -73,6 +73,7 @@ public:
   void saveInt32(int32_t val);
   //void saveInt(int val);
   void saveFloat(float val);
+  void saveVolt(float val);
   void saveFloatAsInt16(float val, int precision = 1);
   void saveDouble(double val);
 
