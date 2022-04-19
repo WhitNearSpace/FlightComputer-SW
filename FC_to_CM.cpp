@@ -187,6 +187,10 @@ void FC_to_CM::saveFloatAsInt16(float val, int precision) {
 }
 void FC_to_CM::saveDouble(double val) { _addBytesToData(val); }
 
+void FC_to_CM::saveVolt(float val) {
+  saveUInt8((uint8_t)(val/0.013));
+}
+
 template<typename T>
 void FC_to_CM::_addBytesToData(T value) {
   int size = sizeof(T);
